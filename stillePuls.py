@@ -30,6 +30,8 @@ heart_rates_2 = read_heart_rate_from_tcx(file2)
 #print(f"lengde på heart_rates_2: {len(heart_rates_2)}")
 
 # Opprett en felles tidsakse basert på den lengste listen
+
+
 min_length = min(len(heart_rates_1), len(heart_rates_2))
 
 # Fjerner overflødige elementer i listene
@@ -39,6 +41,9 @@ heart_rates_2 = heart_rates_2[:min_length]
 # Statistiske kalkulasjoner
 x = heart_rates_1
 y = heart_rates_2
+
+print(x)
+print(y)
 
 n1 = len(x)
 n2 = len(y)
@@ -56,10 +61,20 @@ print("Antall frihetsgrader (ny) = ", ny)
 t_kritisk = stats.t.ppf(1-0.05,ny)
 print("t_kritisk = ", t_kritisk)
 
-stats.ttest_ind_from_stats(mean_x, sd_x, n1, mean_y, sd_y, n2, equal_var=False, alternative = 'greater')
+stats.ttest_ind_from_stats(mean_x, sd_x, n1, mean_y, sd_y, n2, equal_var=True, alternative = 'greater')
 
 
-
+# Plot normal distributions
+x_range = np.linspace(min(min(x), min(y)), max(max(x), max(y))+10, 100)
+plt.figure(figsize=(10, 5))
+plt.plot(x_range, stats.norm.pdf(x_range, mean_x, sd_x), label='Polar Distribution', color='red')
+plt.plot(x_range, stats.norm.pdf(x_range, mean_y, sd_y), label='Garmin Distribution', color='blue')
+plt.xlabel('Heart Rate (bpm)')
+plt.ylabel('Probability Density')
+plt.title('Normal Distributions of Heart Rate Measurements')
+plt.legend()
+plt.grid(True)
+plt.show()
 
 
 
@@ -74,4 +89,4 @@ plt.ylabel('Puls (bpm)')
 plt.title('Måling av puls i stillesittende tilstand')
 plt.legend()
 plt.grid(True)
-#plt.show()
+plt.show()

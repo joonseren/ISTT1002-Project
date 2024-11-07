@@ -1,7 +1,7 @@
 import xml.etree.ElementTree as ET
 import numpy as np
 import matplotlib.pyplot as plt
-import statistics as statistics
+import statistics
 import scipy.stats as stats
 
 # Filstier for TCX-filene
@@ -33,7 +33,38 @@ heart_rates_1 = heart_rates_1[:min_length]
 heart_rates_2 = heart_rates_2[:min_length]
 
 # Statistiske kalkulasjoner
+x = heart_rates_1
+y = heart_rates_2
 
+n1 = len(x)
+n2 = len(y)
+
+mean_x = statistics.mean(x)
+mean_y = statistics.mean(y)
+
+sd_x = statistics.stdev(x)
+sd_y = statistics.stdev(y)
+
+# antall frihetsgrader:
+ny = (sd_x**2/n1+sd_y**2/n2)**2/((sd_x**2/n1)**2/(n1-1)+(sd_y**2/n2)**2/(n2-1))
+print("Antall frihetsgrader (ny) = ", ny)
+
+t_kritisk = stats.t.ppf(1-0.05,ny)
+print("t_kritisk = ", t_kritisk)
+
+stats.ttest_ind_from_stats(mean_x, sd_x, n1, mean_y, sd_y, n2, equal_var=True, alternative = 'greater')
+
+# Plot normal distributions
+x_range = np.linspace(min(min(x), min(y)), max(max(x), max(y))+10, 100)
+plt.figure(figsize=(10, 5))
+plt.plot(x_range, stats.norm.pdf(x_range, mean_x, sd_x), label='Polar Distribution', color='red')
+plt.plot(x_range, stats.norm.pdf(x_range, mean_y, sd_y), label='Garmin Distribution', color='blue')
+plt.xlabel('Heart Rate (bpm)')
+plt.ylabel('Probability Density')
+plt.title('Normal Distributions of Heart Rate Measurements')
+plt.legend()
+plt.grid(True)
+plt.show()
 
 # Plotting heart rates
 plt.figure(figsize=(10, 5))
@@ -44,4 +75,4 @@ plt.ylabel('Puls (bpm)')
 plt.title('Måling av puls i trapp')
 plt.legend()
 plt.grid(True)
-#plt.show()
+plt.show()
