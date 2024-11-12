@@ -32,6 +32,7 @@ heart_rates_2 = read_heart_rate_from_tcx(file2)
 # Opprett en felles tidsakse basert på den lengste listen
 
 
+min_length = 3
 min_length = min(len(heart_rates_1), len(heart_rates_2))
 
 # Fjerner overflødige elementer i listene
@@ -39,42 +40,36 @@ heart_rates_1 = heart_rates_1[:min_length]
 heart_rates_2 = heart_rates_2[:min_length]
 
 # Statistiske kalkulasjoner
-x = heart_rates_1
-y = heart_rates_2
+def calculate_statistics(x, y):
+    n1 = len(x)
+    n2 = len(y)
 
-print(x)
-print(y)
+    mean_x = statistics.mean(x)
+    mean_y = statistics.mean(y)
 
-n1 = len(x)
-n2 = len(y)
+    sd_x = statistics.stdev(x)
+    sd_y = statistics.stdev(y)
 
-mean_x = statistics.mean(x)
-mean_y = statistics.mean(y)
+    T = (mean_x - mean_y)/np.sqrt(sd_x**2/n1 + sd_y**2/n2)
 
-sd_x = statistics.stdev(x)
-sd_y = statistics.stdev(y)
+    # antall frihetsgrader
+    ny = (sd_x**2/n1+sd_y**2/n2)**2/((sd_x**2/n1)**2/(n1-1)+(sd_y**2/n2)**2/(n2-1))
+    print("Antall frihetsgrader (ny) = ", ny)
 
-# antall frihetsgrader:
-ny = (sd_x**2/n1+sd_y**2/n2)**2/((sd_x**2/n1)**2/(n1-1)+(sd_y**2/n2)**2/(n2-1))
-print("Antall frihetsgrader (ny) = ", ny)
-
-t_kritisk = stats.t.ppf(1-0.05,ny)
-print("t_kritisk = ", t_kritisk)
-
-stats.ttest_ind_from_stats(mean_x, sd_x, n1, mean_y, sd_y, n2, equal_var=True, alternative = 'greater')
+    # P-verdi
+    p_verdi = stats.t.sf(np.abs(T), ny) * 2
+    print("P-verdi = ", p_verdi)
+    print("T-verdi = ", T)
 
 
-# Plot normal distributions
-x_range = np.linspace(min(min(x), min(y)), max(max(x), max(y))+10, 100)
-plt.figure(figsize=(10, 5))
-plt.plot(x_range, stats.norm.pdf(x_range, mean_x, sd_x), label='Polar Distribution', color='red')
-plt.plot(x_range, stats.norm.pdf(x_range, mean_y, sd_y), label='Garmin Distribution', color='blue')
-plt.xlabel('Heart Rate (bpm)')
-plt.ylabel('Probability Density')
-plt.title('Normal Distributions of Heart Rate Measurements')
-plt.legend()
-plt.grid(True)
-plt.show()
+    # Signifikansnivå og kritisk t-verdi
+    
+    t_critical = stats.t.ppf(1 - 0.05/2, ny)
+    print("T-kritisk = ±", t_critical)
+    return T, p_verdi
+
+
+calculate_statistics(heart_rates_1, heart_rates_2)
 
 
 
