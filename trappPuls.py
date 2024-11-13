@@ -25,63 +25,88 @@ heart_rates_1 = read_heart_rate_from_tcx(file1)
 heart_rates_2 = read_heart_rate_from_tcx(file2)
 
 
-# Statistiske kalkulasjoner
-def calculate_statistics(x, y):
-    n1 = len(x)
-    n2 = len(y)
+# Regner ut differansen i pulsmålingene
+diff_heartrates = []
+for i in range(len(heart_rates_1)):
+    diff_heartrates.append(heart_rates_1[i] - heart_rates_2[i])
 
-    mean_x = statistics.mean(x)
-    mean_y = statistics.mean(y)
+# Utfører t-test
+sd = statistics.stdev(diff_heartrates)
+mean = statistics.mean(diff_heartrates)
+sigma = sd/np.sqrt(len(diff_heartrates))
 
-    sd_x = statistics.stdev(x)
-    sd_y = statistics.stdev(y)
+t = mean/(sigma)
 
-    T = (mean_x - mean_y)/np.sqrt(sd_x**2/n1 + sd_y**2/n2)
+df = len(diff_heartrates) - 1 
+t_kritisk = stats.t.ppf(1 - 0.025, df)  
 
-    # antall frihetsgrader
-    ny = (sd_x**2/n1+sd_y**2/n2)**2/((sd_x**2/n1)**2/(n1-1)+(sd_y**2/n2)**2/(n2-1))
-    print("Antall frihetsgrader (ny) = ", ny)
+p_verdi = stats.t.sf(np.abs(t), df) * 2
 
-    # P-verdi
-    p_verdi = stats.t.sf(np.abs(T), ny) * 2
-    print("P-verdi = ", p_verdi)
-    print("T-verdi = ", T)
-
-
-    # Signifikansnivå og kritisk t-verdi
-    
-    t_critical = stats.t.ppf(1 - 0.05/2, ny)
-    print("T-kritisk = ±", t_critical)
-    return T, p_verdi
+# Print results
+print(f"\nStatistiske resultater:")
+print(f"Gjennomsnittlig differanse: {mean} bpm")
+print(f"Standardavvik: {sd} bpm")
+print(f"t-verdi: {t}")
+print(f"t-kritisk verdi: {t_kritisk:}")
+print(f"p-verdi: {p_verdi}")
 
 
-calculate_statistics(heart_rates_1, heart_rates_2)
+
 
 
 # Plotting
+# Differanse i pulsmåling mellom Polar og Garmin
+plt.figure(figsize=(10, 5))
+plt.plot(diff_heartrates, label='Difference (Polar - Garmin)', color='green')
+plt.xlabel('Tid (s)')
+plt.ylabel('Pulsdifferanse (bpm)')
+plt.title('Differanse i pulsmåling mellom Polar og Garmin')
+plt.legend()
+plt.grid(True)
+
+
+# Plot normalfordeling
+plt.figure(figsize=(10, 5))
+x = np.linspace(-40, 50, 100)
+plt.plot(x, stats.norm.pdf(x, mean, sd), 'r-', label='Normalfordeling')
+plt.axvline(x=mean, color='red', linestyle='--', label=f'Gjennomsnitt = {mean:.2f}')
+plt.title('Normalfordeling av pulsdifferanser')
+plt.xlabel('Puls (bpm)')
+plt.ylabel('Tetthet')
+plt.legend()
+plt.grid(True)
+
+x = np.linspace(-5, 5, 1000)
+y = stats.t.pdf(x, df)  
+
+# Plotting av t-fordelingen
+plt.figure(figsize=(8, 6))
+plt.plot(x, y, 'k-', lw=2)
+plt.fill_between(x, 0, y, where=(x <= -t_kritisk) | (x >= t_kritisk), color="blue", alpha=0.3)
+plt.text(-t_kritisk, stats.t.pdf(-t_kritisk, df), f"-t_kritisk = {-t_kritisk:.2f}", ha='center', va='bottom')
+plt.text(t_kritisk, stats.t.pdf(t_kritisk, df), f"t_kritisk = {t_kritisk:.2f}", ha='center', va='bottom')
+plt.axvline(x=t, color='red', linestyle='--', label=f't-verdi = {t:.2f}')
+plt.xlabel('X')
+plt.ylabel('Sannsynlighetstetthet')
+plt.title(f'To-sidig t-test ved alpha = {0.05})')
+plt.legend()
+plt.grid(True)
+
+
+# Create boxplot of differences
+plt.figure(figsize=(10, 5))
+plt.boxplot(diff_heartrates)
+plt.ylabel('Pulsdifferanse (bpm)')
+plt.title('Boksplot av pulsdifferanser mellom Polar og Garmin')
+plt.grid(True)
+
+# Plotting heart rates
 plt.figure(figsize=(10, 5))
 plt.plot(heart_rates_1, label='Polar', color='red')
 plt.plot(heart_rates_2, label='Garmin', color='blue')
 plt.xlabel('Tid (s)')
 plt.ylabel('Puls (bpm)')
 plt.title('Måling av puls i trapp')
-plt.legend()
-plt.grid(True)
-
-
-# Plot normal distributions
-plt.figure(figsize=(10, 5))
-x = np.linspace(min(min(heart_rates_1), min(heart_rates_2)), 
-                max(max(heart_rates_1), max(heart_rates_2))+20, 100)
-
-plt.plot(x, stats.norm.pdf(x, np.mean(heart_rates_1), np.std(heart_rates_1)), 
-         'r-', label='Polar Distribution')
-plt.plot(x, stats.norm.pdf(x, np.mean(heart_rates_2), np.std(heart_rates_2)), 
-         'b-', label='Garmin Distribution')
-
-plt.xlabel('Heart Rate (bpm)')
-plt.ylabel('Probability Density')
-plt.title('Normal Distribution of Heart Rates')
 plt.legend()
 plt.grid(True)
 plt.show()

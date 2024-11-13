@@ -14,7 +14,7 @@ pi_over_180 = math.pi / 180
 relativtUsikkerhetTheta1 = sigma1 / abs(theta1) * 100
 relativtUsikkerhetTheta2 = sigma2 / abs(theta2) * 100
 
-# Beregner de partiellderiverte (med korrekte tegn)
+# Beregner de partiellderiverte
 X_theta1 = -pi_over_180 * l1 * math.sin(pi_over_180 * theta1) - pi_over_180 * l2 * math.sin(pi_over_180 * (theta1 + theta2))
 X_theta2 = -pi_over_180 * l2 * math.sin(pi_over_180 * (theta1 + theta2))
 
